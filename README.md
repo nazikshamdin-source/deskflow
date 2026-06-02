@@ -205,7 +205,9 @@ npm run dev
 ## 📖 Lernjournal
 
 ### Woche 1
-> _Noch nicht begonnen_
+> Entwicklungsumgebung vollständig eingerichtet. Git, Java 21, Node.js, 
+> PostgreSQL und DBeaver installiert. GitHub Repo mit main und dev Branch 
+> angelegt. Erstes Mal mit Git Flow gearbeitet.
 
 ### Woche 2
 > _Noch nicht begonnen_
