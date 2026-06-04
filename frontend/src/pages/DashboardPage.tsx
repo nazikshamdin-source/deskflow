@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 
 type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED'
+type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
 
 interface Ticket {
   id: number
   title: string
   description: string
   status: TicketStatus
+  priority: TicketPriority
   createdAt: string
 }
 
@@ -24,17 +26,44 @@ const STATUS_COLORS: Record<TicketStatus, string> = {
   RESOLVED: 'bg-green-100 text-green-700',
 }
 
+const PRIORITY_LABELS: Record<TicketPriority, string> = {
+  LOW: 'Niedrig',
+  MEDIUM: 'Mittel',
+  HIGH: 'Hoch',
+  CRITICAL: 'Kritisch',
+}
+
+const PRIORITY_COLORS: Record<TicketPriority, string> = {
+  LOW: 'text-gray-400',
+  MEDIUM: 'text-blue-500',
+  HIGH: 'text-orange-500',
+  CRITICAL: 'text-red-600 font-bold',
+}
+
+const PRIORITY_ICONS: Record<TicketPriority, string> = {
+  LOW: '↓',
+  MEDIUM: '→',
+  HIGH: '↑',
+  CRITICAL: '🔥',
+}
+
 export default function DashboardPage() {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [filter, setFilter] = useState<TicketStatus | 'ALL'>('ALL')
   const [showForm, setShowForm] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
+  const [newPriority, setNewPriority] = useState<TicketPriority>('MEDIUM')
+  const [error, setError] = useState('')
   const navigate = useNavigate()
 
   const loadTickets = async () => {
-    const res = await api.get('/api/tickets')
-    setTickets(res.data)
+    try {
+      const res = await api.get('/api/tickets')
+      setTickets(res.data)
+    } catch {
+      setError('Tickets konnten nicht geladen werden.')
+    }
   }
 
   useEffect(() => { loadTickets() }, [])
@@ -46,26 +75,47 @@ export default function DashboardPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
-    await api.post('/api/tickets', { title: newTitle, description: newDesc })
-    setNewTitle('')
-    setNewDesc('')
-    setShowForm(false)
-    loadTickets()
+    try {
+      await api.post('/api/tickets', { title: newTitle, description: newDesc, priority: newPriority })
+      setNewTitle('')
+      setNewDesc('')
+      setNewPriority('MEDIUM')
+      setShowForm(false)
+      loadTickets()
+    } catch {
+      setError('Ticket konnte nicht erstellt werden.')
+    }
   }
 
   const handleStatusChange = async (id: number, ticket: Ticket, status: TicketStatus) => {
-    await api.put(`/api/tickets/${id}`, { ...ticket, status })
-    loadTickets()
+    try {
+      await api.put(`/api/tickets/${id}`, { ...ticket, status })
+      loadTickets()
+    } catch {
+      setError('Status konnte nicht geändert werden.')
+    }
   }
 
   const handleDelete = async (id: number) => {
     if (confirm('Ticket wirklich löschen?')) {
-      await api.delete(`/api/tickets/${id}`)
-      loadTickets()
+      try {
+        await api.delete(`/api/tickets/${id}`)
+        loadTickets()
+      } catch {
+        setError('Ticket konnte nicht gelöscht werden.')
+      }
     }
   }
 
   const filtered = filter === 'ALL' ? tickets : tickets.filter(t => t.status === filter)
+
+  // Statistiken
+  const stats = {
+    total: tickets.length,
+    open: tickets.filter(t => t.status === 'OPEN').length,
+    inProgress: tickets.filter(t => t.status === 'IN_PROGRESS').length,
+    resolved: tickets.filter(t => t.status === 'RESOLVED').length,
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -81,6 +131,35 @@ export default function DashboardPage() {
       </nav>
 
       <div className="max-w-5xl mx-auto px-6 py-8">
+
+        {/* Fehleranzeige */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError('')} className="font-bold">✕</button>
+          </div>
+        )}
+
+        {/* Statistik-Leiste */}
+        <div className="grid grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
+            <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
+            <p className="text-sm text-gray-500 mt-1">Gesamt</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-red-100 p-4 text-center">
+            <p className="text-3xl font-bold text-red-600">{stats.open}</p>
+            <p className="text-sm text-gray-500 mt-1">Offen</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-yellow-100 p-4 text-center">
+            <p className="text-3xl font-bold text-yellow-600">{stats.inProgress}</p>
+            <p className="text-sm text-gray-500 mt-1">In Bearbeitung</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-green-100 p-4 text-center">
+            <p className="text-3xl font-bold text-green-600">{stats.resolved}</p>
+            <p className="text-sm text-gray-500 mt-1">Gelöst</p>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Alle Tickets</h2>
@@ -110,6 +189,19 @@ export default function DashboardPage() {
               rows={3}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Priorität</label>
+              <select
+                value={newPriority}
+                onChange={e => setNewPriority(e.target.value as TicketPriority)}
+                className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="LOW">↓ Niedrig</option>
+                <option value="MEDIUM">→ Mittel</option>
+                <option value="HIGH">↑ Hoch</option>
+                <option value="CRITICAL">🔥 Kritisch</option>
+              </select>
+            </div>
             <div className="flex gap-2">
               <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">
                 Erstellen
@@ -131,7 +223,7 @@ export default function DashboardPage() {
                 filter === s ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:border-blue-400'
               }`}
             >
-              {s === 'ALL' ? 'Alle' : STATUS_LABELS[s]}
+              {s === 'ALL' ? `Alle (${stats.total})` : `${STATUS_LABELS[s]} (${tickets.filter(t => t.status === s).length})`}
             </button>
           ))}
         </div>
@@ -155,9 +247,13 @@ export default function DashboardPage() {
                 {ticket.description && (
                   <p className="text-gray-500 text-sm line-clamp-2">{ticket.description}</p>
                 )}
-                <p className="text-xs text-gray-400">{new Date(ticket.createdAt).toLocaleDateString('de-DE')}</p>
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-medium ${PRIORITY_COLORS[ticket.priority]}`}>
+                    {PRIORITY_ICONS[ticket.priority]} {PRIORITY_LABELS[ticket.priority]}
+                  </span>
+                  <p className="text-xs text-gray-400">{new Date(ticket.createdAt).toLocaleDateString('de-DE')}</p>
+                </div>
 
-                {/* Status ändern */}
                 <select
                   value={ticket.status}
                   onChange={e => handleStatusChange(ticket.id, ticket, e.target.value as TicketStatus)}

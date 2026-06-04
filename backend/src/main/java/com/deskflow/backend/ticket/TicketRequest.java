@@ -8,6 +8,7 @@ public class TicketRequest {
     private String title;
     private String description;
     private TicketStatus status;
+    private TicketPriority priority;
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -17,4 +18,7 @@ public class TicketRequest {
 
     public TicketStatus getStatus() { return status; }
     public void setStatus(TicketStatus status) { this.status = status; }
+
+    public TicketPriority getPriority() { return priority; }
+    public void setPriority(TicketPriority priority) { this.priority = priority; }
 }

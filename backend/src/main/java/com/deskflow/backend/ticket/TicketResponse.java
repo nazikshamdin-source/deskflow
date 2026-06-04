@@ -10,6 +10,7 @@ public class TicketResponse {
     private String title;
     private String description;
     private TicketStatus status;
+    private TicketPriority priority;
     private LocalDateTime createdAt;
 
     // Statische Factory-Methode: wandelt Entity → DTO um
@@ -19,6 +20,7 @@ public class TicketResponse {
         dto.title = ticket.getTitle();
         dto.description = ticket.getDescription();
         dto.status = ticket.getStatus();
+        dto.priority = ticket.getPriority();
         dto.createdAt = ticket.getCreatedAt();
         return dto;
     }
@@ -27,5 +29,6 @@ public class TicketResponse {
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public TicketStatus getStatus() { return status; }
+    public TicketPriority getPriority() { return priority; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }

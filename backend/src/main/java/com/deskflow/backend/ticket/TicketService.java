@@ -30,6 +30,7 @@ public class TicketService {
         Ticket ticket = new Ticket();
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
+        if (request.getPriority() != null) ticket.setPriority(request.getPriority());
         // status & createdAt werden automatisch via @PrePersist gesetzt
         return TicketResponse.from(ticketRepository.save(ticket));
     }
@@ -39,9 +40,8 @@ public class TicketService {
                 .orElseThrow(() -> new RuntimeException("Ticket mit ID " + id + " nicht gefunden"));
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
-        if (request.getStatus() != null) {
-            ticket.setStatus(request.getStatus());
-        }
+        if (request.getStatus() != null) ticket.setStatus(request.getStatus());
+        if (request.getPriority() != null) ticket.setPriority(request.getPriority());
         return TicketResponse.from(ticketRepository.save(ticket));
     }
 
