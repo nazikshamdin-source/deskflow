@@ -1,18 +1,21 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/deskflow
-    username: postgres
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/deskflow}
+    username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 application:
   security:
     jwt:
       secret: ${JWT_SECRET}
-      expiration: ${JWT_EXPIRATION}
+      expiration: ${JWT_EXPIRATION:86400000}

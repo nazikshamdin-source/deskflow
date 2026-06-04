@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const api = axios.create({ baseURL: '/' })
+// Lokal: '/' (Vite Proxy leitet weiter)
+// Produktion: Railway Backend URL
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/' })
 
 // Token automatisch bei jedem Request mitsenden
 api.interceptors.request.use((config) => {
