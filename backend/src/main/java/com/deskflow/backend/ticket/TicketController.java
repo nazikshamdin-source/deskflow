@@ -15,24 +15,24 @@ public class TicketController {
     }
 
     @GetMapping
-    public List<Ticket> getAllTickets() {
+    public List<TicketResponse> getAllTickets() {
         return ticketService.getAllTickets();
     }
 
     @GetMapping("/status/{status}")
-    public List<Ticket> getByStatus(@PathVariable TicketStatus status) {
+    public List<TicketResponse> getByStatus(@PathVariable TicketStatus status) {
         return ticketService.getTicketsByStatus(status);
     }
 
     @PostMapping
-    public ResponseEntity<Ticket> createTicket(@RequestBody Ticket ticket) {
-        return ResponseEntity.ok(ticketService.createTicket(ticket));
+    public ResponseEntity<TicketResponse> createTicket(@RequestBody TicketRequest request) {
+        return ResponseEntity.ok(ticketService.createTicket(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Ticket> updateTicket(@PathVariable Long id,
-                                               @RequestBody Ticket ticket) {
-        return ResponseEntity.ok(ticketService.updateTicket(id, ticket));
+    public ResponseEntity<TicketResponse> updateTicket(@PathVariable Long id,
+                                                       @RequestBody TicketRequest request) {
+        return ResponseEntity.ok(ticketService.updateTicket(id, request));
     }
 
     @DeleteMapping("/{id}")

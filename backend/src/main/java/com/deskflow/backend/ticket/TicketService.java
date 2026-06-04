@@ -12,28 +12,43 @@ public class TicketService {
         this.ticketRepository = ticketRepository;
     }
 
-    public List<Ticket> getAllTickets() {
-        return ticketRepository.findAll();
+    public List<TicketResponse> getAllTickets() {
+        return ticketRepository.findAll()
+                .stream()
+                .map(TicketResponse::from)
+                .toList();
     }
 
-    public List<Ticket> getTicketsByStatus(TicketStatus status) {
-        return ticketRepository.findByStatus(status);
+    public List<TicketResponse> getTicketsByStatus(TicketStatus status) {
+        return ticketRepository.findByStatus(status)
+                .stream()
+                .map(TicketResponse::from)
+                .toList();
     }
 
-    public Ticket createTicket(Ticket ticket) {
-        return ticketRepository.save(ticket);
+    public TicketResponse createTicket(TicketRequest request) {
+        Ticket ticket = new Ticket();
+        ticket.setTitle(request.getTitle());
+        ticket.setDescription(request.getDescription());
+        // status & createdAt werden automatisch via @PrePersist gesetzt
+        return TicketResponse.from(ticketRepository.save(ticket));
     }
 
-    public Ticket updateTicket(Long id, Ticket updated) {
+    public TicketResponse updateTicket(Long id, TicketRequest request) {
         Ticket ticket = ticketRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Ticket not found"));
-        ticket.setTitle(updated.getTitle());
-        ticket.setDescription(updated.getDescription());
-        ticket.setStatus(updated.getStatus());
-        return ticketRepository.save(ticket);
+                .orElseThrow(() -> new RuntimeException("Ticket mit ID " + id + " nicht gefunden"));
+        ticket.setTitle(request.getTitle());
+        ticket.setDescription(request.getDescription());
+        if (request.getStatus() != null) {
+            ticket.setStatus(request.getStatus());
+        }
+        return TicketResponse.from(ticketRepository.save(ticket));
     }
 
     public void deleteTicket(Long id) {
+        if (!ticketRepository.existsById(id)) {
+            throw new RuntimeException("Ticket mit ID " + id + " nicht gefunden");
+        }
         ticketRepository.deleteById(id);
     }
 }
